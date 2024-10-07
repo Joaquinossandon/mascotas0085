@@ -2,6 +2,7 @@ const db = require("../../db");
 const {
     obtenerMascota,
     obtenerSexoMascotas,
+    obtenerTodasLasMascotas,
 } = require("../../models/mascotas");
 
 const obtenerMascotaPorId = async (req, res) => {
@@ -31,7 +32,7 @@ const obtenerInformacionMascotas = async (req, res) => {
     const cursor = await obtenerSexoMascotas();
 
     let resultado = await cursor.read(10);
-    
+
     let infoSexo = {
         Masculinos: 0,
         Femeninos: 0,
@@ -56,7 +57,13 @@ const obtenerInformacionMascotas = async (req, res) => {
     res.json(infoSexo);
 };
 
+const obtenerTodasMascotas = async (req, res) => {
+    const mascotas = await obtenerTodasLasMascotas();
+    res.status(200).json(mascotas);
+};
+
 module.exports = {
     obtenerMascotaPorId,
     obtenerInformacionMascotas,
+    obtenerTodasMascotas,
 };
