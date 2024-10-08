@@ -32,9 +32,48 @@ const obtenerSexoMascotas = async () => {
     return cursor;
 };
 
+const agregarMascota = async ({
+    id_dueno,
+    nombre,
+    especie,
+    raza,
+    fecha_nacimiento,
+    sexo,
+}) => {
+    try {
+        const agregado = await db.query({
+            text: "INSERT INTO mascotas (id_dueno, nombre, especie, raza, fecha_nacimiento, sexo) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+            values: [id_dueno, nombre, especie, raza, fecha_nacimiento, sexo],
+        });
+    
+        return agregado;
+    } catch (error) {
+        throw new Error("ERROR!")
+    }
+};
+
+const editarMascota = async ({
+    id,
+    id_dueno,
+    nombre,
+    especie,
+    raza,
+    fecha_nacimiento,
+    sexo,
+}) => {
+    const edicion = await db.query(
+        "UPDATE mascotas SET id_dueno=$1, nombre=$2, especie=$3, raza=$4, fecha_nacimiento=$5, sexo=$6 WHERE id=${$7} RETURNING *",
+        [id_dueno, nombre, especie, raza, fecha_nacimiento, sexo, id]
+    );
+
+    return edicion;
+};
+
 module.exports = {
     obtenerMascota,
     obtenerSexoMascotas,
     obtenerMascotasPorDueno,
     obtenerTodasLasMascotas,
+    agregarMascota,
+    editarMascota,
 };

@@ -4,6 +4,7 @@ const rutasMascotas = require("./src/routes/mascotas");
 
 const app = express();
 
+app.use(express.json())
 app.use("/", rutasPersonas);
 app.use("/", rutasMascotas);
 

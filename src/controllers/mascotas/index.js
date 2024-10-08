@@ -3,6 +3,8 @@ const {
     obtenerMascota,
     obtenerSexoMascotas,
     obtenerTodasLasMascotas,
+    agregarMascota,
+    editarMascota,
 } = require("../../models/mascotas");
 
 const obtenerMascotaPorId = async (req, res) => {
@@ -62,8 +64,61 @@ const obtenerTodasMascotas = async (req, res) => {
     res.status(200).json(mascotas);
 };
 
+const agregarUnaMascota = async (req, res) => {
+    try {
+        const { id_dueno, nombre, especie, raza, fecha_nacimiento, sexo } =
+            req.body;
+        const nuevaMascota = {
+            id_dueno,
+            nombre,
+            especie,
+            raza,
+            fecha_nacimiento,
+            sexo,
+        };
+        const { rows } = await agregarMascota(nuevaMascota);
+
+        res.status(200).json(rows);
+    } catch (err) {
+        // se debe controlar dependiendo del codigo del error 👀
+        res.status(400).json({
+            err: "Algo ocurrió",
+            error: err,
+        });
+    }
+};
+
+const EditarMascota = async (req, res) => {
+    try {
+        // /mascotas/:id
+        const { id } = req.params;
+        const { id_dueno, nombre, raza, especie, fecha_nacimiento, sexo } =
+            req.body;
+        const mascotaEditada = {
+            id,
+            id_dueno,
+            nombre,
+            raza,
+            especie,
+            fecha_nacimiento,
+            sexo,
+        };
+
+        const { rows } = await editarMascota(mascotaEditada);
+
+        res.status(200).json(rows);
+    } catch (error) {
+        res.status(400).json({
+            err: "Algo ocurrió",
+            error,
+        });
+    }
+};
+
 module.exports = {
     obtenerMascotaPorId,
     obtenerInformacionMascotas,
     obtenerTodasMascotas,
+    agregarUnaMascota,
+    EditarMascota,
 };
