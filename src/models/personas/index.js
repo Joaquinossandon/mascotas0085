@@ -63,30 +63,83 @@ const agregarPersonaConMascotas = async (personaMascotas) => {
         ); // rows tiene un arreglo, en este caso de un solo elemento => [{id: ID}]
         const id_dueno = rows[0].id;
 
-        try {
-            mascotas.forEach(
-                async ({ nombre, especie, raza, fecha_nacimiento, sexo }) => {
-                    await client.query(
-                        "INSERT INTO mascotas (id_dueno, nombre, especie, raza, fecha_nacimiento, sexo) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-                        [id_dueno, nombre, especie, raza, fecha_nacimiento, sexo]
-                    );
-                }
+        // ATENCION: forEach no es compatible con la asincronía, para estos casos, es mejor usar for of o un map
+        // si usamos un map, debemos tambien utilizar un promise.all para resolver todas las promesas resultantes de la iteracion.
+
+        // mascotas.forEach(async () => {
+        //     await client.query(
+        //         "INSERT INTO mascotas (id_dueno, nombre, especie, raza, fecha_nacimiento, sexo) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+        //         [id_dueno, nombre, especie, raza, fecha_nacimiento, sexo]
+        //     );
+        // });
+
+        for (let {
+            nombre,
+            especie,
+            raza,
+            fecha_nacimiento,
+            sexo,
+        } of mascotas) {
+            await client.query(
+                "INSERT INTO mascotas (id_dueno, nombre, especie, raza, fecha_nacimiento, sexo) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+                [id_dueno, nombre, especie, raza, fecha_nacimiento, sexo]
             );
-            
-        } catch (error) {
-            throw new Error("ERROOOOR")
         }
 
         await client.query("COMMIT");
+        client.release();
         return {
             message: "todo ok",
         };
     } catch (error) {
-        console.log("ME EJECUTO");
         await db.query("ROLLBACK");
+        throw new Error(error);
+    }
+};
+
+const eliminarDuenoYTransferirMascotas = async (
+    duenoEliminar,
+    duenoAsignar
+) => {
+    const client = await db.connect();
+    try {
+        await client.query("BEGIN");
+
+        const { rows: nombresMascota } = await client.query(
+            "UPDATE mascotas SET id_dueno=$2 WHERE id_dueno=$1 RETURNING nombre",
+            [duenoEliminar, duenoAsignar]
+        );
+
+        const { rows: duenoAsignado } = await client.query(
+            "SELECT * FROM duenos WHERE id=$1",
+            [duenoAsignar]
+        );
+
+        const { rows: duenoEliminado } = await client.query(
+            "DELETE FROM duenos WHERE id=$1 RETURNING *",
+            [duenoEliminar]
+        );
+
+        if (!duenoAsignado.length) {
+            throw new Error("El dueño a asignar no existe");
+        }
+        if (!duenoEliminado.length) {
+            throw new Error("El dueño a eliminar no existe");
+        }
+        if (!nombresMascota.length) {
+            throw new Error("El usuario no tiene mascotas o no existe.");
+        }
+
+        await client.query("COMMIT");
+
         return {
-            message: error,
+            duenoEliminado,
+            duenoAsignado,
+            mascotas: nombresMascota,
         };
+    } catch (error) {
+        await client.query("ROLLBACK");
+        throw new Error(error.message);
     }
 };
 
@@ -96,4 +149,5 @@ module.exports = {
     agregarPersona,
     editarPersona,
     agregarPersonaConMascotas,
+    eliminarDuenoYTransferirMascotas,
 };

@@ -48,7 +48,7 @@ const agregarMascota = async ({
     
         return agregado;
     } catch (error) {
-        throw new Error("ERROR!")
+        throw new Error(error)
     }
 };
 

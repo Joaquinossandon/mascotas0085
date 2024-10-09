@@ -4,6 +4,7 @@ const {
     agregarPersona,
     editarPersona,
     agregarPersonaConMascotas,
+    eliminarDuenoYTransferirMascotas,
 } = require("../../models/personas");
 const db = require("../../db");
 
@@ -63,7 +64,23 @@ const AgregarPersonaConMascotas = async (req, res) => {
 
         res.status(200).json(resultado);
     } catch (error) {
-        res.status(400).json({ msg: "Ocurrió un error", error });
+        console.log(error.message);
+        res.status(400).json({ msg: error.message });
+    }
+};
+
+const EliminarPersonaYReasignarMascotas = async (req, res) => {
+    const { idEliminar, idAsignar } = req.body;
+
+    try {
+        const resultado = await eliminarDuenoYTransferirMascotas(
+            idEliminar,
+            idAsignar
+        );
+
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
 };
 
@@ -73,6 +90,7 @@ module.exports = {
     AgregarPersona,
     EditarPersona,
     AgregarPersonaConMascotas,
+    EliminarPersonaYReasignarMascotas,
 };
 
 // ESTAMOS EN BREAK, VOLVEMOS A LAS 10:22
